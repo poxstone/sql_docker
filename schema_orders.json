@@ -1,6 +1,6 @@
 [
     {"name":"orderId",        "type": "INTEGER"  },
-    {"name":"userId",         "type": "STRING"   },
+    {"name":"userId",         "type": "INTEGER"   },
     {"name":"products",       "type": "RECORD",
         "mode":"NULLABLE",
         "fields": [

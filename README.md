@@ -70,7 +70,7 @@ export TABLE_SEC_PUPULATE_CSV="$(pwd)/populate_orders.csv";
 ```bash
 bq mk --dataset "${PROJECT_ID}:${DATASET_MAIN}";
 bq mk --table --schema "${TABLE_MAIN_SCHEMA}" "${PROJECT_ID}:${DATASET_MAIN}.${TABLE_MAIN}";
-bq mk --table --schema "${TABLE_SEC_SCHEMA}" "${PROJECT_ID}:${DATASET_SEC}.${TABLE_SEC}";
+bq mk --table --schema "${TABLE_SEC_SCHEMA}" "${PROJECT_ID}:${DATASET_MAIN}.${TABLE_SEC}";
 ```
 - Populate SQL
 ```bash
