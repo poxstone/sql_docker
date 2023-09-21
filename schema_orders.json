@@ -1,0 +1,23 @@
+[
+    {"name":"orderId",        "type": "INTEGER"  },
+    {"name":"userId",         "type": "STRING"   },
+    {"name":"products",       "type": "RECORD",
+        "mode":"NULLABLE",
+        "fields": [
+            {
+            "name": "p_name",
+            "type": "STRING",
+            "mode": "NULLABLE"
+            },
+            {
+            "name": "p_number",
+            "type": "NUMERIC",
+            "mode": "NULLABLE"
+            }
+        ]
+    },
+    {"name":"price",          "type": "FLOAT"   },
+    {"name":"date",           "type": "TIME"     },
+    {"name":"location",       "type": "STRING"   },
+    {"name":"cant",           "type": "NUMERIC"  }
+]

@@ -1,0 +1,4 @@
+orderId,userId,products,price,date,location,cant
+0,0,"banana",10.5,"17:31:38.775561","spain",3
+1,1,"uva",10.5,"15:12:40.635561","argentina",3
+2,2,"aguacate",10.5,"20:13:58.776301","china",3

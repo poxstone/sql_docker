@@ -49,7 +49,7 @@ for i in {1..100};do
 done;
 ```
 
-## Create bigquery table
+## Create bigquery table A
 
 - Variables
 ```bash
@@ -59,17 +59,26 @@ export TABLE_MAIN="table_user";
 export TABLE_MAIN_SCHEMA="$(pwd)/schema_users.json";
 export TABLE_MAIN_PUPULATE_SQL="$(pwd)/populate_users.sql";
 export TABLE_MAIN_PUPULATE_CSV="$(pwd)/populate_users.csv";
+# data 2
+export TABLE_SEC="table_order";
+export TABLE_SEC_SCHEMA="$(pwd)/schema_orders.json";
+export TABLE_SEC_PUPULATE_SQL="$(pwd)/populate_orders.sql";
+export TABLE_SEC_PUPULATE_CSV="$(pwd)/populate_orders.csv";
+
 ```
 - Create dataset and table
 ```bash
 bq mk --dataset "${PROJECT_ID}:${DATASET_MAIN}";
 bq mk --table --schema "${TABLE_MAIN_SCHEMA}" "${PROJECT_ID}:${DATASET_MAIN}.${TABLE_MAIN}";
+bq mk --table --schema "${TABLE_SEC_SCHEMA}" "${PROJECT_ID}:${DATASET_SEC}.${TABLE_SEC}";
 ```
 - Populate SQL
 ```bash
 bq query --use_legacy_sql="false" < "${TABLE_MAIN_PUPULATE_SQL}";
+bq query --use_legacy_sql="false" < "${TABLE_SEC_PUPULATE_SQL}";
 ```
 - Polulate with CSV
 ```bash
 bq load --autodetect --source_format=CSV "${TABLE_MAIN_PUPULATE_CSV}";
+bq load --autodetect --source_format=CSV "${TABLE_SEC_PUPULATE_CSV}";
 ```

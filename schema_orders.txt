@@ -1,0 +1,7 @@
+orderId:INTEGER
+userId:STRING
+products:RECORD
+price:FLOAT
+date:TIME
+location:STRING
+cant:NUMERIC
