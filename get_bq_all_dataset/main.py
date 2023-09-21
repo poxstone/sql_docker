@@ -9,33 +9,31 @@ client = bigquery.Client(project=project_id)
 # Lista todos los conjuntos de datos en el proyecto
 def get_datasets():
     datasets = list(client.list_datasets())
-    datasets_id = []
-    
     if datasets:
         print("Conjuntos de datos en el proyecto:")
         for dataset in datasets:
             print(f"ID: {dataset.dataset_id}, Proyecto: {dataset.project}")
-            datasets_id.append(dataset.dataset_id)
+
     else:
         print(f"No se encontraron conjuntos de datos en el proyecto {project_id}.")
+        datasets = []
+    return dataset
     
-    return datasets_id
-
 
 def get_tables_by_dataset(dataset_id):
     # Obtiene una referencia al conjunto de datos
     dataset_ref = client.dataset(dataset_id)
     # Lista todas las tablas en el conjunto de datos
     tables = list(client.list_tables(dataset_ref))
-    tables_id = []
 
     if tables:
         print(f"Tablas en el conjunto de datos {dataset_id}:")
         for table in tables:
             print(f"Nombre de la tabla: {table.table_id}")
-            tables_id.append(table.table_id)
     else:
         print(f"No se encontraron tablas en el conjunto de datos {dataset_id}.")
+        tables = []
+    return tables
 
 
 def get_table_schema(dataset_id, table_id):
@@ -47,8 +45,9 @@ def get_table_schema(dataset_id, table_id):
     print(f"Esquema de la tabla {table_id}:")
     for field in table.schema:
         print(f"Nombre: {field.name}, Tipo: {field.field_type}")
-        schema.append(field)
-    return schema
-    
+    return table.schema
 
-get_table_schema('dataset_test_persons_01', 'table_user')
+
+get_datasets()
+#get_tables_by_dataset('dataset_test_persons_01')
+#get_table_schema('dataset_test_persons_01', 'table_order')
