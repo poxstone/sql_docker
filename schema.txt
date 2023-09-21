@@ -1,0 +1,9 @@
+id:INTEGER,
+identification:INTEGER,
+name:STRING,
+email:STRING,
+age:INTEGER,
+credit_card:STRING,
+password:STRING,
+coordinates:GEOGRAPHY,
+phone:STRING

@@ -48,3 +48,18 @@ for i in {1..100};do
   mysql -u root -p"${PASSWD}" -h 127.0.0.1 -D TestDB -e "INSERT INTO TestDB.Users VALUES (null, 1016${i}, 'user name-${i}', 'name-${i}@mail.com', ${i})";
 done;
 ```
+
+## Create bigquery table
+
+- Variables
+```bash
+export PROJECT_ID="poxs4-datalake-prd";
+export DATASET_MAIN="dataset_test_persons_01";
+export TABLE_MAIN="table_user";
+export TABLE_MAIN_SCHEMA="$(pwd)/schema.json";
+```
+- Create dataset and table
+```bash
+bq mk --dataset "${PROJECT_ID}:${DATASET_MAIN}";
+
+```

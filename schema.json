@@ -1,0 +1,11 @@
+[
+    {"name":"id",             "type": "INTEGER"  },
+    {"name":"identification", "type": "INTEGER"  },
+    {"name":"name",           "type": "STRING"   },
+    {"name":"email",          "type": "STRING"   },
+    {"name":"age",            "type": "INTEGER"  },
+    {"name":"credit_card",    "type": "STRING"   },
+    {"name":"password",       "type": "STRING"   },
+    {"name":"coordinates",    "type": "GEOGRAPHY"},
+    {"name":"phone",          "type": "STRING"   }
+]
