@@ -83,3 +83,5 @@ bq query --use_legacy_sql="false" < "${TABLE_SEC_PUPULATE_SQL}";
 bq load --autodetect --source_format=CSV "${TABLE_MAIN_PUPULATE_CSV}";
 bq load --autodetect --source_format=CSV "${TABLE_SEC_PUPULATE_CSV}";
 ```
+
+# BQ get all schema
