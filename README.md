@@ -56,10 +56,10 @@ done;
 export PROJECT_ID="poxs4-datalake-prd";
 export DATASET_MAIN="dataset_test_persons_01";
 export TABLE_MAIN="table_user";
-export TABLE_MAIN_SCHEMA="$(pwd)/schema.json";
+export TABLE_MAIN_SCHEMA="$(pwd)/schema_users.json";
 ```
 - Create dataset and table
 ```bash
 bq mk --dataset "${PROJECT_ID}:${DATASET_MAIN}";
-
+bq mk --table --schema "${TABLE_MAIN_SCHEMA}" "${PROJECT_ID}:${DATASET_MAIN}.${TABLE_MAIN}";
 ```

@@ -1,3 +1,4 @@
-id,identification,name,email,age
-0,1015884738,pablo remalas,pablo.demalas@mail.com,25
-1,1016882530,carlos calero,carlos.calero@mail.com,40
+id,identification,name,email,age, credit_card,password,coordinates,phone
+0,1015884738,pablo remalas,pablo.demalas@mail.com,25,5558 2598 0891 1325,myS3cur3P445,,+72 350 286 54 89
+1,1016882530,carlos calero,carlos.calero@mail.com,40,5558 2598 9209 1285,myS3cur3P445,,+1 321 286 54 89
+2,1016882530,andres de la fuente,andres.fuente@outlook.com,40,5558 2598 9126 2913,myS3cur3P445,,+240 312 350 286 54 89
