@@ -1,0 +1,17 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    "version": "0.2.0",
+    "configurations": [
+      {
+          "name": "main",
+          "type": "python",
+          "request": "launch",
+          "program": "${workspaceFolder}/get_bq_all_dataset/main.py",
+          "console": "internalConsole",
+          // "args": [""],
+          "justMyCode": true
+        },
+    ]
+  }
+  
