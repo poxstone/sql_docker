@@ -38,4 +38,17 @@ def get_tables_by_dataset(dataset_id):
         print(f"No se encontraron tablas en el conjunto de datos {dataset_id}.")
 
 
-get_tables_by_dataset('dataset_test_persons_01')
+def get_table_schema(dataset_id, table_id):
+    dataset_ref = client.dataset(dataset_id)
+    table_ref = dataset_ref.table(table_id)
+    table = client.get_table(table_ref)
+    schema = []
+    # Imprime el esquema de la tabla
+    print(f"Esquema de la tabla {table_id}:")
+    for field in table.schema:
+        print(f"Nombre: {field.name}, Tipo: {field.field_type}")
+        schema.append({'name':field.name, 'type': field.field_type})
+    return schema
+    
+
+get_table_schema('dataset_test_persons_01', 'table_user')
