@@ -1,3 +1,3 @@
-INSERT INTO `poxs4-datalake-prd.dataset_test_persons_01.table_order` VALUES (0,0,STRUCT <p_name STRING,p_number NUMERIC>("banana"  ,5),4.5,"17:31:38.775561","spain"    ,3)
-INSERT INTO `poxs4-datalake-prd.dataset_test_persons_01.table_order` VALUES (1,1,STRUCT <p_name STRING,p_number NUMERIC>("uva"     ,9),3.3,"15:12:40.635561","argentina",3)
-INSERT INTO `poxs4-datalake-prd.dataset_test_persons_01.table_order` VALUES (2,2,STRUCT <p_name STRING,p_number NUMERIC>("aguacate",3),8.8,"20:13:58.776301","china"    ,3)
+INSERT INTO `poxs4-datalake-prd.dataset_test_persons_01.table_order` VALUES (0,0,STRUCT <p_name STRING,p_number NUMERIC>("banana"  ,5),4.5,"17:31:38.775561","spain"    ,3);
+INSERT INTO `poxs4-datalake-prd.dataset_test_persons_01.table_order` VALUES (1,1,STRUCT <p_name STRING,p_number NUMERIC>("uva"     ,9),3.3,"15:12:40.635561","argentina",3);
+INSERT INTO `poxs4-datalake-prd.dataset_test_persons_01.table_order` VALUES (2,2,STRUCT <p_name STRING,p_number NUMERIC>("aguacate",3),8.8,"20:13:58.776301","china"    ,3);

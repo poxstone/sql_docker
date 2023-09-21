@@ -65,6 +65,7 @@ export TABLE_SEC_SCHEMA="$(pwd)/schema_orders.json";
 export TABLE_SEC_PUPULATE_SQL="$(pwd)/populate_orders.sql";
 export TABLE_SEC_PUPULATE_CSV="$(pwd)/populate_orders.csv";
 
+gcloud config set project "${PROJECT_ID}";
 ```
 - Create dataset and table
 ```bash
