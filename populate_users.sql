@@ -1,0 +1,3 @@
+INSERT INTO `poxs4-datalake-prd.dataset_test_persons_01.table_user` VALUES (0,1015884738,"pablo remalas","pablo.demalas@mail.com",25,"5558 2598 0891 1325","myS3cur3P445",st_geogfromtext('POINT(1 1)'),"+72 350 286 54 89");
+INSERT INTO `poxs4-datalake-prd.dataset_test_persons_01.table_user` VALUES (1,1016882530,"carlos calero","carlos.calero@yahoo.com",40,"5558 2598 9209 1285","123456",st_geogfromtext('POINT(10 2)'),"+1 321 286 54 89");
+INSERT INTO `poxs4-datalake-prd.dataset_test_persons_01.table_user` VALUES (2,1016882530,"andres de la fuente","andres.fuente@outlook.com",40,"5558 2598 9126 2913","qweasd",st_geogfromtext('POINT(20 3)'),"+240 312 350 286 54 89");

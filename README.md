@@ -57,9 +57,19 @@ export PROJECT_ID="poxs4-datalake-prd";
 export DATASET_MAIN="dataset_test_persons_01";
 export TABLE_MAIN="table_user";
 export TABLE_MAIN_SCHEMA="$(pwd)/schema_users.json";
+export TABLE_MAIN_PUPULATE_SQL="$(pwd)/populate_users.sql";
+export TABLE_MAIN_PUPULATE_CSV="$(pwd)/populate_users.csv";
 ```
 - Create dataset and table
 ```bash
 bq mk --dataset "${PROJECT_ID}:${DATASET_MAIN}";
 bq mk --table --schema "${TABLE_MAIN_SCHEMA}" "${PROJECT_ID}:${DATASET_MAIN}.${TABLE_MAIN}";
+```
+- Populate SQL
+```bash
+bq query --use_legacy_sql="false" < "${TABLE_MAIN_PUPULATE_SQL}";
+```
+- Polulate with CSV
+```bash
+bq load --autodetect --source_format=CSV "${TABLE_MAIN_PUPULATE_CSV}";
 ```
