@@ -1,4 +1,5 @@
 import os
+import json
 from google.cloud import bigquery
 
 # Especifica el ID de tu proyecto de GCP
@@ -17,7 +18,7 @@ def get_datasets():
     else:
         print(f"No se encontraron conjuntos de datos en el proyecto {project_id}.")
         datasets = []
-    return dataset
+    return datasets
     
 
 def get_tables_by_dataset(dataset_id):
@@ -48,6 +49,27 @@ def get_table_schema(dataset_id, table_id):
     return table.schema
 
 
-get_datasets()
+def get_all_schemas(project_id=project_id):
+    datasets = get_datasets()
+    dataset_list = []
+    
+    for dataset in datasets:
+        tables = get_tables_by_dataset(dataset.dataset_id)
+        dataset_dic = {'dataset_id': dataset.dataset_id, 'tables': []}
+
+        for table in tables:
+            schema = get_table_schema(table.dataset_id, table.table_id)
+            table_dic = {'table_id': table.table_id, 'schema': schema}
+            dataset_dic['tables'].append(table_dic)
+        
+        dataset_list.append(dataset_dic)
+    
+    return dataset_list
+            
+
+
+#get_datasets()
 #get_tables_by_dataset('dataset_test_persons_01')
 #get_table_schema('dataset_test_persons_01', 'table_order')
+dataset_list = get_all_schemas()
+print(dataset_list)
