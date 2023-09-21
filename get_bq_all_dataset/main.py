@@ -47,7 +47,7 @@ def get_table_schema(dataset_id, table_id):
     print(f"Esquema de la tabla {table_id}:")
     for field in table.schema:
         print(f"Nombre: {field.name}, Tipo: {field.field_type}")
-        schema.append({'name':field.name, 'type': field.field_type})
+        schema.append(field)
     return schema
     
 
