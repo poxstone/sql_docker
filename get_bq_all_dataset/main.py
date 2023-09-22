@@ -72,14 +72,15 @@ def get_all_schemas(project_id=project_id):
 
 
 def do_bq_query(column_name, table_full_name):
-    results = None
+    results_array = []
     if GET_DATA_EXAMPLE:
         sql_query = f"""SELECT {column_name} FROM `{table_full_name}` LIMT 10"""
         query_job = client.query(sql_query)
         results = query_job.result()
-        for row in results:
-            print(row)
-    return results
+        results = list(query_job.result())
+        # Convierte los resultados en un array de diccionarios
+        results_array = [dict(row) for row in results]
+    return results_array
 
 
 def add_subfields(field_main, dataset, table, data, parent_name=None):
