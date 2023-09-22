@@ -155,7 +155,7 @@ def do_fields_csv():
                 printing(f'main: {field_main.name}')
                 data = add_subfields(field_main, dataset, table, data)
             if GET_DATA_EXAMPLE:
-                print(f'working (get sql example): {dataset} {table}')
+                print(f"working (get sql example): {dataset['dataset_id']} {table['table_id']}")
 
     with open(FILE_CSV, mode="w", newline="") as archivo_csv:
         escritor = csv.writer(archivo_csv)
