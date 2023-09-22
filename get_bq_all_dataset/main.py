@@ -173,6 +173,12 @@ def do_bq_query(column_name, field_type, table_full_name):
     return results_array
 
 
+def field_format(field_string):
+    if type(field_string) is str:
+        field_string = field_string.replace("\n", "\\n")
+    return field_string
+
+
 def add_subfields(field_main, dataset, table, data, parent_name=''):
     field_name = f'{parent_name}.{field_main["name"]}' if parent_name else field_main["name"]
     if field_main["type"] == 'RECORD':
@@ -183,20 +189,18 @@ def add_subfields(field_main, dataset, table, data, parent_name=''):
         dataset_id = dataset['datasetReference']['datasetId']
         table_id = table['tableReference']['tableId']
         data_example = do_bq_query(field_name, field_main['type'], f'{project_id}.{dataset_id}.{table_id}')
-        data.append(
-                        [
-                        dataset_id,
-                        table_id,
-                        field_name,
-                        field_main['type'] if 'type' in field_main else '',
-                        field_main['mode'] if 'mode' in field_main else '',
-                        field_main['default_value_expression'] if 'default_value_expression' in field_main else '',
-                        field_main['max_length'] if 'max_length' in field_main else '',
-                        field_main['description'] if 'description' in field_main else '',
-                        field_main['policy_tags'] if 'policy_tags' in field_main else '',
-                        data_example
-                        ]
-                    )
+        data.append([
+                        field_format(dataset_id),
+                        field_format(table_id),
+                        field_format(field_name),
+                        field_format(field_main['type'] if 'type' in field_main else ''),
+                        field_format(field_main['mode'] if 'mode' in field_main else ''),
+                        field_format(field_main['default_value_expression'] if 'default_value_expression' in field_main else ''),
+                        field_format(field_main['max_length'] if 'max_length' in field_main else ''),
+                        field_format(field_main['description'] if 'description' in field_main else ''),
+                        field_format(field_main['policy_tags'] if 'policy_tags' in field_main else ''),
+                        field_format(data_example),
+                    ])
         with open(FILE_CSV, "a") as archivo_csv:
             escritor = csv.writer(archivo_csv)
             escritor.writerow(data[-1])
