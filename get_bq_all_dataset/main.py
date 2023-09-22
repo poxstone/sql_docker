@@ -41,6 +41,7 @@ def get_datasets():
     else:
         printing(f"No se encontraron conjuntos de datos en el proyecto {project_id}.")
         datasets = []
+    print(f'datasets_cant: {len(datasets)}')
     return datasets
     
 
@@ -61,6 +62,7 @@ def get_tables_by_dataset(dataset_id):
     else:
         printing(f"No se encontraron tablas en el conjunto de datos {dataset_id}.")
         tables = []
+    print(f'tables_cant ({dataset_id}): {len(tables)}')
     return tables
 
 
@@ -155,7 +157,7 @@ def do_fields_csv():
                 printing(f'main: {field_main.name}')
                 data = add_subfields(field_main, dataset, table, data)
             if GET_DATA_EXAMPLE:
-                print(f"working (get sql example): {dataset['dataset_id']} {table['table_id']}")
+                print(f"working (get sql example): {dataset['dataset_id']}.{table['table_id']}")
 
     with open(FILE_CSV, mode="w", newline="") as archivo_csv:
         escritor = csv.writer(archivo_csv)
