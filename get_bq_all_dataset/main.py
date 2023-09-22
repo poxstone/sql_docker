@@ -8,7 +8,9 @@ project_id = os.environ.get('PROJECT_ID', 'poxs4-datalake-prd')
 # Crea un cliente de BigQuery
 client = bigquery.Client(project=project_id)
 FILE_CSV = "fields.csv"
-SCHEMA_CSV = ['dataset','table','field_name','field_type','atributes','policy_tags','example_value']
+SCHEMA_CSV = ['dataset','table','field_name','field_type','field_mode','field_description','policy_tags','example_value']
+GET_DATA_EXAMPLE = True
+
 
 # Lista todos los conjuntos de datos en el proyecto
 def get_datasets():
@@ -68,23 +70,35 @@ def get_all_schemas(project_id=project_id):
     
     return dataset_list
 
-def add_subfields(field_main, dataset, table, data, is_child=None):
+
+def do_bq_query(column_name, table_full_name):
+    results = None
+    if GET_DATA_EXAMPLE:
+        sql_query = f"""SELECT {column_name} FROM `{table_full_name}` LIMT 10"""
+        query_job = client.query(sql_query)
+        results = query_job.result()
+    return results
+
+
+def add_subfields(field_main, dataset, table, data, parent_name=None):
+    field_name = f'{parent_name}.{field_main.name}' if parent_name else field_main.name
     if field_main.field_type == 'RECORD':
         for field_sub in field_main.fields:
-            data = add_subfields(field_sub, dataset, table, data, field_main.name)
+            data = add_subfields(field_sub, dataset, table, data, field_name)
     else:
-        field_name = f'{is_child}.{field_main.name}' if is_child else field_main.name
         print(f'--loop: {field_name}')
         data.append(
                         [dataset['dataset_id'],
                         table['table_id'],
                         field_name,
                         field_main.field_type,
-                        f'{field_main.mode}|{field_main.description}',
+                        field_main.mode,
+                        field_main.description,
                         field_main.policy_tags,
                         '']
                     )
     return data
+
 
 def do_fields_csv():
     dataset_list = get_all_schemas()
