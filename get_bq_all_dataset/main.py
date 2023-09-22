@@ -152,6 +152,7 @@ def get_all_schemas(project_id=project_id):
             dataset['tables'].append(table)
     # save to file
     datasets_json = save_dict_to_file(datasets)
+    print(f'Errores: {ERRORS}')
     #return datasets  # for debug
     return datasets_json
 
