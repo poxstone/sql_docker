@@ -20,14 +20,14 @@ SCHEMA_CSV = [
     'field_description',
     'policy_tags',
     'example_value']
-GET_DATA_EXAMPLE = True
-LOGS_PRINT = os.getenv('LOGS_PRINT', 'false')
+GET_DATA_EXAMPLE = True if os.getenv('GET_DATA_EXAMPLE', 'true').lower() == 'true' else False
+LOGS_PRINT = True if os.getenv('LOGS_PRINT', 'false').lower() == 'true' else False 
 ERRORS = []
 
 
-def printing(string, print_logs='true'):
-    if LOGS_PRINT.lower() == 'true':
-        if print_logs == 'true':
+def printing(string, print_logs=True):
+    if LOGS_PRINT.lower():
+        if print_logs:
             #logging.info(str(string))
             print(f'{str(string)}')
     return ''
@@ -159,7 +159,7 @@ def get_all_schemas(project_id=project_id):
 
 def do_bq_query(column_name, field_type, table_full_name):
     results_array = []
-    if GET_DATA_EXAMPLE:
+    if GET_DATA_EXAMPLE == True:
         modificator = 'DISTINCT' if not field_type in ['GEOGRAPHY', 'TIMESTAMP', 'DATE', 'TIME', 'DATETIME', 'BYTES', 'STRUCT'] else ''
         sql_query = f"""SELECT {modificator} {column_name} FROM `{table_full_name}` LIMIT 10"""
         query_job = client.query(sql_query)
