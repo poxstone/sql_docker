@@ -79,6 +79,7 @@ def get_table_schema(dataset_id, table_id):
     printing(f"Esquema de la tabla {table_id}:")
     for field in table.schema:
         printing(f"Nombre: {field.name}, Tipo: {field.field_type}")
+    print(f'working: {dataset_id}.{table_id}')
     return table.schema
 
 
