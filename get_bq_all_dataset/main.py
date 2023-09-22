@@ -77,6 +77,8 @@ def do_bq_query(column_name, table_full_name):
         sql_query = f"""SELECT {column_name} FROM `{table_full_name}` LIMT 10"""
         query_job = client.query(sql_query)
         results = query_job.result()
+        for row in results:
+            print(row)
     return results
 
 
