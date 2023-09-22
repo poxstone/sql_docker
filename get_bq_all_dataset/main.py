@@ -23,6 +23,7 @@ SCHEMA_CSV = [
 GET_DATA_EXAMPLE = True
 LOGS_PRINT = os.getenv('LOGS_PRINT', 'false')
 ERRORS = []
+MAX_EXAMPLES = os.getenv('MAX_EXAMPLES', 10)
 
 
 def printing(string, print_logs='true'):
@@ -161,7 +162,7 @@ def do_bq_query(column_name, field_type, table_full_name):
     results_array = []
     if GET_DATA_EXAMPLE:
         modificator = 'DISTINCT' if not field_type in ['GEOGRAPHY', 'TIMESTAMP', 'DATE', 'TIME', 'DATETIME', 'BYTES', 'STRUCT'] else ''
-        sql_query = f"""SELECT {modificator} {column_name} FROM `{table_full_name}` LIMIT 10"""
+        sql_query = f"""SELECT {modificator} `{column_name}` FROM `{table_full_name}` LIMIT {MAX_EXAMPLES}"""
         query_job = client.query(sql_query)
         results = query_job.result()
         results = list(query_job.result())
@@ -179,15 +180,46 @@ def field_format(field_string):
     return field_string
 
 
-def add_subfields(field_main, dataset, table, data, parent_name=''):
+def read_csv_last(file_csv):
+    last_line_dic = {}
+    with open(file_csv, mode="r", newline="") as archivo_csv:
+        reader_csv = csv.reader(archivo_csv)
+        
+        last_line = None
+        for linea in reader_csv:
+            last_line = linea
+        
+        if last_line is not None:
+            printing("Última línea del archivo CSV:", last_line)
+            # convert array to dict
+            for key, value in zip(SCHEMA_CSV, last_line):
+                last_line_dic[key] = value
+
+        else:
+            printing("El archivo CSV está vacío o no se pudo leer.")
+
+    return last_line_dic
+
+
+def add_subfields(field_main, dataset, table, data, parent_name='', auto_continue_last_dic=None):
     field_name = f'{parent_name}.{field_main["name"]}' if parent_name else field_main["name"]
     if field_main["type"] == 'RECORD':
         for field_sub in field_main["fields"]:
-            data = add_subfields(field_sub, dataset, table, data, field_name)
+            data = add_subfields(field_sub, dataset, table, data, parent_name=field_name, auto_continue_last_dic=auto_continue_last_dic)
     else:
         printing(f'--loop: {field_name}')
         dataset_id = dataset['datasetReference']['datasetId']
         table_id = table['tableReference']['tableId']
+        
+        # disable search if found last registry
+        if auto_continue_last_dic:
+            if auto_continue_last_dic['dataset'] == dataset_id and \
+                auto_continue_last_dic['table'] == table_id and \
+                auto_continue_last_dic['field_name'] == field_main['name']:
+                # if find last file
+                auto_continue_last_dic = None
+            return auto_continue_last_dic
+
         data_example = do_bq_query(field_name, field_main['type'], f'{project_id}.{dataset_id}.{table_id}')
         data.append([
                         field_format(dataset_id),
@@ -208,25 +240,28 @@ def add_subfields(field_main, dataset, table, data, parent_name=''):
     return data
 
 
-def do_fields_csv():
+def do_fields_csv():    
     dataset_list = load_file_to_dict(FILE_JSON)
     if not dataset_list:
         dataset_list = get_all_schemas()
-    data = [
-        SCHEMA_CSV,
-    ]
-    with open(FILE_CSV, mode="w", newline="") as archivo_csv:
-        escritor = csv.writer(archivo_csv)
-        for fila in data:
-            escritor.writerow(fila)
+    data = [SCHEMA_CSV]
+    # get last csv registry to continue
+    AUTO_CONTINUE_LAST_DIC = read_csv_last(FILE_CSV)
+
+    if not AUTO_CONTINUE_LAST_DIC:
+        with open(FILE_CSV, mode="w", newline="") as archivo_csv:
+            escritor = csv.writer(archivo_csv)
+            for fila in data:
+                escritor.writerow(fila)
+
     for dataset in dataset_list:
         print(f"working (do csv): {dataset['id']}")
         for table in dataset['tables']:
             for field_main in table['schema']:
                 #printing(f'{dataset['dataset_id']},{table['table_id']},{field.name},{field.field_type}')
                 printing(f'main: {field_main["name"]}')
-                data = add_subfields(field_main, dataset, table, data)
-
+                AUTO_CONTINUE_LAST_DIC = add_subfields(field_main, dataset, table, data, auto_continue_last_dic=AUTO_CONTINUE_LAST_DIC)
+            
             if GET_DATA_EXAMPLE:
                 print(f"working (get sql example): {table['id']}")
 
