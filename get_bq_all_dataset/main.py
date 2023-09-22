@@ -26,7 +26,7 @@ ERRORS = []
 
 
 def printing(string, print_logs=True):
-    if LOGS_PRINT.lower():
+    if LOGS_PRINT:
         if print_logs:
             #logging.info(str(string))
             print(f'{str(string)}')
