@@ -165,7 +165,7 @@ def do_fields_csv():
         for fila in data:
             escritor.writerow(fila)
 
-    printing(f"El archivo CSV '{FILE_CSV}' ha sido creado con éxito.")
+    printing(f"El archivo CSV '{FILE_CSV}' ha sido creado con éxito. Errores:: {ERRORS}")
 
 
 #get_datasets()
