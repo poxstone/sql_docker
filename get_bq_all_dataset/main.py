@@ -20,14 +20,14 @@ SCHEMA_CSV = [
     'field_description',
     'policy_tags',
     'example_value']
-GET_DATA_EXAMPLE = True if os.getenv('GET_DATA_EXAMPLE', 'true').lower() == 'true' else False
-LOGS_PRINT = True if os.getenv('LOGS_PRINT', 'false').lower() == 'true' else False 
+GET_DATA_EXAMPLE = True
+LOGS_PRINT = os.getenv('LOGS_PRINT', 'false')
 ERRORS = []
 
 
-def printing(string, print_logs=True):
-    if LOGS_PRINT:
-        if print_logs:
+def printing(string, print_logs='true'):
+    if LOGS_PRINT.lower() == 'true':
+        if print_logs == 'true':
             #logging.info(str(string))
             print(f'{str(string)}')
     return ''
@@ -159,13 +159,13 @@ def get_all_schemas(project_id=project_id):
 
 def do_bq_query(column_name, field_type, table_full_name):
     results_array = []
-    if GET_DATA_EXAMPLE == True:
+    if GET_DATA_EXAMPLE:
         modificator = 'DISTINCT' if not field_type in ['GEOGRAPHY', 'TIMESTAMP', 'DATE', 'TIME', 'DATETIME', 'BYTES', 'STRUCT'] else ''
         sql_query = f"""SELECT {modificator} {column_name} FROM `{table_full_name}` LIMIT 10"""
         query_job = client.query(sql_query)
         results = query_job.result()
         results = list(query_job.result())
-        # Convierte los resultados en un array de diccionarios
+        
         for row in results:
             printing(row)
         #results_array = [row.get(column_name) for row in results]
@@ -184,7 +184,8 @@ def add_subfields(field_main, dataset, table, data, parent_name=''):
         table_id = table['tableReference']['tableId']
         data_example = do_bq_query(field_name, field_main['type'], f'{project_id}.{dataset_id}.{table_id}')
         data.append(
-                        [dataset_id,
+                        [
+                        dataset_id,
                         table_id,
                         field_name,
                         field_main['type'] if 'type' in field_main else '',
@@ -193,8 +194,13 @@ def add_subfields(field_main, dataset, table, data, parent_name=''):
                         field_main['max_length'] if 'max_length' in field_main else '',
                         field_main['description'] if 'description' in field_main else '',
                         field_main['policy_tags'] if 'policy_tags' in field_main else '',
-                        data_example]
+                        data_example
+                        ]
                     )
+        with open(FILE_CSV, "a") as archivo_csv:
+            escritor = csv.writer(archivo_csv)
+            escritor.writerow(data[-1])
+        
     return data
 
 
@@ -205,6 +211,10 @@ def do_fields_csv():
     data = [
         SCHEMA_CSV,
     ]
+    with open(FILE_CSV, mode="w", newline="") as archivo_csv:
+        escritor = csv.writer(archivo_csv)
+        for fila in data:
+            escritor.writerow(fila)
     for dataset in dataset_list:
         print(f"working (do csv): {dataset['id']}")
         for table in dataset['tables']:
@@ -212,13 +222,10 @@ def do_fields_csv():
                 #printing(f'{dataset['dataset_id']},{table['table_id']},{field.name},{field.field_type}')
                 printing(f'main: {field_main["name"]}')
                 data = add_subfields(field_main, dataset, table, data)
+
             if GET_DATA_EXAMPLE:
                 print(f"working (get sql example): {table['id']}")
 
-    with open(FILE_CSV, mode="w", newline="") as archivo_csv:
-        escritor = csv.writer(archivo_csv)
-        for fila in data:
-            escritor.writerow(fila)
 
     print(f"El archivo CSV '{FILE_CSV}' ha sido creado con éxito.")
 
