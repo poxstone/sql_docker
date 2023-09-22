@@ -151,6 +151,7 @@ def do_fields_csv():
         #['dataset_test_persons_01','table_order','orderId','INTEGER',"0,2,3"]
     ]
     for dataset in dataset_list:
+        print(f"working (do csv): {dataset['dataset_id']}")
         for table in dataset['tables']:
             for field_main in table['schema']:
                 #printing(f'{dataset['dataset_id']},{table['table_id']},{field.name},{field.field_type}')
