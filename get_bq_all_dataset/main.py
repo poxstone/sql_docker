@@ -8,7 +8,17 @@ project_id = os.environ.get('PROJECT_ID', 'poxs4-datalake-prd')
 # Crea un cliente de BigQuery
 client = bigquery.Client(project=project_id)
 FILE_CSV = "fields.csv"
-SCHEMA_CSV = ['dataset','table','field_name','field_type','field_mode','field_description','policy_tags','example_value']
+SCHEMA_CSV = [
+    'dataset',
+    'table',
+    'field_name',
+    'field_type',
+    'field_mode',
+    'default_value_expresion',
+    'max_length',
+    'field_description',
+    'policy_tags',
+    'example_value']
 GET_DATA_EXAMPLE = True
 
 
@@ -71,15 +81,19 @@ def get_all_schemas(project_id=project_id):
     return dataset_list
 
 
-def do_bq_query(column_name, table_full_name):
+def do_bq_query(column_name, field_type, table_full_name):
     results_array = []
     if GET_DATA_EXAMPLE:
-        sql_query = f"""SELECT {column_name} FROM `{table_full_name}` LIMT 10"""
+        modificator = 'DISTINCT' if not field_type in ['GEOGRAPHY', 'TIMESTAMP', 'DATE', 'TIME', 'DATETIME', 'BYTES', 'STRUCT'] else ''
+        sql_query = f"""SELECT {modificator} {column_name} FROM `{table_full_name}` LIMIT 10"""
         query_job = client.query(sql_query)
         results = query_job.result()
         results = list(query_job.result())
         # Convierte los resultados en un array de diccionarios
-        results_array = [dict(row) for row in results]
+        for row in results:
+            print(row)
+        #results_array = [row.get(column_name) for row in results]
+        results_array = ' | '.join(map(str, [row.get(column_name) for row in results]))
     return results_array
 
 
@@ -90,15 +104,20 @@ def add_subfields(field_main, dataset, table, data, parent_name=None):
             data = add_subfields(field_sub, dataset, table, data, field_name)
     else:
         print(f'--loop: {field_name}')
+        dataset_id = dataset['dataset_id']
+        table_id = table['table_id']
+        data_example = do_bq_query(field_name, field_main.field_type, f'{project_id}.{dataset_id}.{table_id}')
         data.append(
-                        [dataset['dataset_id'],
-                        table['table_id'],
+                        [dataset_id,
+                        table_id,
                         field_name,
                         field_main.field_type,
                         field_main.mode,
+                        field_main.default_value_expression,
+                        field_main.max_length,
                         field_main.description,
                         field_main.policy_tags,
-                        '']
+                        data_example]
                     )
     return data
 
