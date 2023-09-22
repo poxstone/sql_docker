@@ -1,0 +1,10 @@
+dataset:STRING,
+table:STRING,
+field_name:STRING,
+field_type:STRING,
+field_mode:STRING,
+default_value_expresion:STRING,
+max_length:STRING,
+field_description:STRING,
+policy_tags:STRING,
+example_value:STRING
