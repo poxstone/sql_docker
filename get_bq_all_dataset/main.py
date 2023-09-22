@@ -20,17 +20,26 @@ SCHEMA_CSV = [
     'policy_tags',
     'example_value']
 GET_DATA_EXAMPLE = True
+LOGS_PRINT = os.getenv('LOGS_PRINT', 'false')
+ERRORS = []
 
+
+def printing(string, print_logs='true'):
+    if LOGS_PRINT.lower() == 'true':
+        if print_logs == 'true':
+            #logging.info(str(string))
+            print(f'{str(string)}')
+    return ''
 
 # Lista todos los conjuntos de datos en el proyecto
 def get_datasets():
     datasets = list(client.list_datasets())
     if datasets:
-        print("Conjuntos de datos en el proyecto:")
+        printing("Conjuntos de datos en el proyecto:")
         for dataset in datasets:
-            print(f"ID: {dataset.dataset_id}, Proyecto: {dataset.project}")
+            printing(f"ID: {dataset.dataset_id}, Proyecto: {dataset.project}")
     else:
-        print(f"No se encontraron conjuntos de datos en el proyecto {project_id}.")
+        printing(f"No se encontraron conjuntos de datos en el proyecto {project_id}.")
         datasets = []
     return datasets
     
@@ -39,14 +48,18 @@ def get_tables_by_dataset(dataset_id):
     # Obtiene una referencia al conjunto de datos
     dataset_ref = client.dataset(dataset_id)
     # Lista todas las tablas en el conjunto de datos
-    tables = list(client.list_tables(dataset_ref))
-
+    tables = None
+    try:
+        tables = list(client.list_tables(dataset_ref))
+    except Exception as e:
+        printing(f'ERROR: {e}')
+        ERRORS.append({'dataset': dataset_id, 'error': f'{e}'})
     if tables:
-        print(f"Tablas en el conjunto de datos {dataset_id}:")
+        printing(f"Tablas en el conjunto de datos {dataset_id}:")
         for table in tables:
-            print(f"Nombre de la tabla: {table.table_id}")
+            printing(f"Nombre de la tabla: {table.table_id}")
     else:
-        print(f"No se encontraron tablas en el conjunto de datos {dataset_id}.")
+        printing(f"No se encontraron tablas en el conjunto de datos {dataset_id}.")
         tables = []
     return tables
 
@@ -54,12 +67,18 @@ def get_tables_by_dataset(dataset_id):
 def get_table_schema(dataset_id, table_id):
     dataset_ref = client.dataset(dataset_id)
     table_ref = dataset_ref.table(table_id)
-    table = client.get_table(table_ref)
-    schema = []
+
+    try:
+        table = client.get_table(table_ref)
+    except Exception as e:
+        printing(f'ERROR: {e}')
+        ERRORS.append({'table': table_id, 'error': f'{e}'})
+        return []
+
     # Imprime el esquema de la tabla
-    print(f"Esquema de la tabla {table_id}:")
+    printing(f"Esquema de la tabla {table_id}:")
     for field in table.schema:
-        print(f"Nombre: {field.name}, Tipo: {field.field_type}")
+        printing(f"Nombre: {field.name}, Tipo: {field.field_type}")
     return table.schema
 
 
@@ -91,7 +110,7 @@ def do_bq_query(column_name, field_type, table_full_name):
         results = list(query_job.result())
         # Convierte los resultados en un array de diccionarios
         for row in results:
-            print(row)
+            printing(row)
         #results_array = [row.get(column_name) for row in results]
         results_array = ' | '.join(map(str, [row.get(column_name) for row in results]))
     return results_array
@@ -103,7 +122,7 @@ def add_subfields(field_main, dataset, table, data, parent_name=None):
         for field_sub in field_main.fields:
             data = add_subfields(field_sub, dataset, table, data, field_name)
     else:
-        print(f'--loop: {field_name}')
+        printing(f'--loop: {field_name}')
         dataset_id = dataset['dataset_id']
         table_id = table['table_id']
         data_example = do_bq_query(field_name, field_main.field_type, f'{project_id}.{dataset_id}.{table_id}')
@@ -131,8 +150,8 @@ def do_fields_csv():
     for dataset in dataset_list:
         for table in dataset['tables']:
             for field_main in table['schema']:
-                #print(f'{dataset['dataset_id']},{table['table_id']},{field.name},{field.field_type}')
-                print(f'main: {field_main.name}')
+                #printing(f'{dataset['dataset_id']},{table['table_id']},{field.name},{field.field_type}')
+                printing(f'main: {field_main.name}')
                 data = add_subfields(field_main, dataset, table, data)
 
     with open(FILE_CSV, mode="w", newline="") as archivo_csv:
@@ -140,12 +159,12 @@ def do_fields_csv():
         for fila in data:
             escritor.writerow(fila)
 
-    print(f"El archivo CSV '{FILE_CSV}' ha sido creado con éxito.")
+    printing(f"El archivo CSV '{FILE_CSV}' ha sido creado con éxito.")
 
 
 #get_datasets()
 #get_tables_by_dataset('dataset_test_persons_01')
 #get_table_schema('dataset_test_persons_01', 'table_order')
 #dataset_list = get_all_schemas()
-#print(dataset_list)
+#printing(dataset_list)
 do_fields_csv()
