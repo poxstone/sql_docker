@@ -1,11 +1,14 @@
 import os
 import json
+import csv
 from google.cloud import bigquery
 
 # Especifica el ID de tu proyecto de GCP
 project_id = os.environ.get('PROJECT_ID', 'poxs4-datalake-prd')
 # Crea un cliente de BigQuery
 client = bigquery.Client(project=project_id)
+FILE_CSV = "fields.csv"
+SCHEMA_CSV = ['dataset','table','field_name','field_type','atributes','policy_tags','example_value']
 
 # Lista todos los conjuntos de datos en el proyecto
 def get_datasets():
@@ -14,7 +17,6 @@ def get_datasets():
         print("Conjuntos de datos en el proyecto:")
         for dataset in datasets:
             print(f"ID: {dataset.dataset_id}, Proyecto: {dataset.project}")
-
     else:
         print(f"No se encontraron conjuntos de datos en el proyecto {project_id}.")
         datasets = []
@@ -65,11 +67,49 @@ def get_all_schemas(project_id=project_id):
         dataset_list.append(dataset_dic)
     
     return dataset_list
-            
+
+def add_subfields(field_main, dataset, table, data, is_child=None):
+    if field_main.field_type == 'RECORD':
+        for field_sub in field_main.fields:
+            data = add_subfields(field_sub, dataset, table, data, field_main.name)
+    else:
+        field_name = f'{is_child}.{field_main.name}' if is_child else field_main.name
+        print(f'--loop: {field_name}')
+        data.append(
+                        [dataset['dataset_id'],
+                        table['table_id'],
+                        field_name,
+                        field_main.field_type,
+                        f'{field_main.mode}|{field_main.description}',
+                        field_main.policy_tags,
+                        '']
+                    )
+    return data
+
+def do_fields_csv():
+    dataset_list = get_all_schemas()
+    data = [
+        SCHEMA_CSV,
+        #['dataset_test_persons_01','table_order','orderId','INTEGER',"0,2,3"]
+    ]
+    for dataset in dataset_list:
+        for table in dataset['tables']:
+            for field_main in table['schema']:
+                #print(f'{dataset['dataset_id']},{table['table_id']},{field.name},{field.field_type}')
+                print(f'main: {field_main.name}')
+                data = add_subfields(field_main, dataset, table, data)
+
+    with open(FILE_CSV, mode="w", newline="") as archivo_csv:
+        escritor = csv.writer(archivo_csv)
+        for fila in data:
+            escritor.writerow(fila)
+
+    print(f"El archivo CSV '{FILE_CSV}' ha sido creado con éxito.")
 
 
 #get_datasets()
 #get_tables_by_dataset('dataset_test_persons_01')
 #get_table_schema('dataset_test_persons_01', 'table_order')
-dataset_list = get_all_schemas()
-print(dataset_list)
+#dataset_list = get_all_schemas()
+#print(dataset_list)
+do_fields_csv()

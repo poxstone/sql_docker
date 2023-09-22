@@ -19,3 +19,4 @@ mount/
 jmeter.log
 .fuse_hidden*
 credentials.json
+**/fields.csv
