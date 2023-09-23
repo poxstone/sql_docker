@@ -24,7 +24,7 @@ GET_DATA_EXAMPLE = True
 LOGS_PRINT = os.getenv('LOGS_PRINT', 'false')
 ERRORS = []
 MAX_EXAMPLES = os.getenv('MAX_EXAMPLES', 10)
-#AUTO_CONTINUE_LAST_DIC = os.getenv('AUTO_CONTINUE_LAST_DIC', False)
+#AUTO_CONTINUE_LAST_DIC = os.getenv('AUTO_CONTINUE_LAST_DIC', "false")
 
 
 def printing(string, print_logs='true'):
@@ -50,7 +50,7 @@ def get_datasets():
     else:
         printing(f"No se encontraron conjuntos de datos en el proyecto {project_id}.")
         datasets = []
-    print(f'datasets_cant: {len(datasets)}')
+    printing(f'datasets_cant: {len(datasets)}', "false")
     #return datasets
     return datasets_dic
     
@@ -76,7 +76,7 @@ def get_tables_by_dataset(dataset_id):
     else:
         printing(f"No se encontraron tablas en el conjunto de datos {dataset_id}.")
         tables = []
-    print(f'tables_cant ({dataset_id}): {len(tables)}')
+    printing(f'tables_cant ({dataset_id}): {len(tables)}', "false")
     #return tables
     return tables_dic
 
@@ -115,7 +115,7 @@ def get_table_schema(dataset_id, table_id):
             #field_dic['fields'] = [x.__dict__ for x in field.__dict__['_fields']]
             field_dic['fields'] = fields_to_dict(field.__dict__['_fields'])
         schema_dic.append(field_dic)
-    print(f'working (get_table_schema): {dataset_id}.{table_id}')
+    printing(f'working (get_table_schema): {dataset_id}.{table_id}', "false")
     #return table.schema
     return schema_dic
 
@@ -123,7 +123,7 @@ def get_table_schema(dataset_id, table_id):
 def save_dict_to_file(obj_file):
     with open(FILE_JSON, "w") as json_file:
         json.dump(obj_file, json_file)
-    print(f"El diccionario ha sido guardado en '{FILE_JSON}' en formato JSON.")
+    printing(f"El diccionario ha sido guardado en '{FILE_JSON}' en formato JSON.", "false")
     return load_file_to_dict(FILE_JSON)
 
 
@@ -154,25 +154,28 @@ def get_all_schemas(project_id=project_id):
             dataset['tables'].append(table)
     # save to file
     datasets_json = save_dict_to_file(datasets)
-    print(f'Errores durante get datasets and tables: {ERRORS}')
+    printing(f'Errores durante get datasets and tables: {ERRORS}', "false")
     #return datasets  # for debug
     return datasets_json
 
 
 def do_bq_query(column_name, field_type, table_full_name):
-    results_array = []
+    results_array = ''
     if GET_DATA_EXAMPLE:
-        modificator = 'DISTINCT' if not field_type in ['GEOGRAPHY', 'TIMESTAMP', 'DATE', 'TIME', 'DATETIME', 'BYTES', 'STRUCT'] else ''
-        column_name_mod = column_name.replace(".","`.`")
-        sql_query = f"""SELECT {modificator} `{column_name_mod}` FROM `{table_full_name}` LIMIT {MAX_EXAMPLES}"""
-        query_job = client.query(sql_query)
-        results = query_job.result()
-        results = list(query_job.result())
-        
-        for row in results:
-            printing(row)
-        #results_array = [row.get(column_name) for row in results]
-        results_array = ' | '.join(map(str, [row.get(column_name) for row in results]))
+        try:
+            modificator = 'DISTINCT' if not field_type in ['GEOGRAPHY', 'TIMESTAMP', 'DATE', 'TIME', 'DATETIME', 'BYTES', 'STRUCT'] else ''
+            column_name_mod = column_name.replace(".","`.`")
+            sql_query = f"""SELECT {modificator} `{column_name_mod}` FROM `{table_full_name}` LIMIT {MAX_EXAMPLES}"""
+            query_job = client.query(sql_query)
+            results = query_job.result()
+            results = list(query_job.result())
+            
+            for row in results:
+                printing(row)
+            #results_array = [row.get(column_name) for row in results]
+            results_array = ' | '.join(map(str, [row.get(column_name) for row in results]))
+        except Exception as e:
+            results_array = f'--#ERROR: {e}'
     return results_array
 
 
@@ -205,13 +208,7 @@ def read_csv_last(file_csv):
 
 
 def add_subfields(field_main, dataset, table, data, parent_name=''):
-    if data:
-        print(data)
-    else:
-        print(data)
-
     global AUTO_CONTINUE_LAST_DIC
-    print(AUTO_CONTINUE_LAST_DIC)
     field_name = f'{parent_name}.{field_main["name"]}' if parent_name else field_main["name"]
     if field_main["type"] == 'RECORD':
         for field_sub in field_main["fields"]:
@@ -258,7 +255,6 @@ def do_fields_csv():
         dataset_list = get_all_schemas()
     data = [SCHEMA_CSV]
     # get last csv registry to continue
-    print(AUTO_CONTINUE_LAST_DIC)
     AUTO_CONTINUE_LAST_DIC = read_csv_last(FILE_CSV)
 
     if not AUTO_CONTINUE_LAST_DIC:
@@ -268,7 +264,7 @@ def do_fields_csv():
                 escritor.writerow(fila)
 
     for dataset in dataset_list:
-        print(f"working (do csv): {dataset['id']}")
+        printing(f"working (do csv): {dataset['id']}", "false")
         for table in dataset['tables']:
             for field_main in table['schema']:
                 #printing(f'{dataset['dataset_id']},{table['table_id']},{field.name},{field.field_type}')
@@ -276,10 +272,10 @@ def do_fields_csv():
                 data = add_subfields(field_main, dataset, table, data)
             
             if GET_DATA_EXAMPLE:
-                print(f"working (get sql example): {table['id']}")
+                printing(f"working (get sql example): {table['id']}", "false")
 
 
-    print(f"El archivo CSV '{FILE_CSV}' ha sido creado con éxito.")
+    printing(f"El archivo CSV '{FILE_CSV}' ha sido creado con éxito.", "false")
 
 
 #get_datasets()
