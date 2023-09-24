@@ -172,7 +172,7 @@ def do_bq_query(column_name, field_type, table_full_name):
             
             for row in results:
                 printing(row)
-            #results_array = [row.get(column_name) for row in results]
+            # TODO: Recortar resultados individuales max 100, reemplazar caracteres no ascci
             results_array = ' | '.join(map(str, [row.get(column_name) for row in results]))
         except Exception as e:
             results_array = f'--#ERROR: {e}'
@@ -192,7 +192,10 @@ def read_csv_last(file_csv):
             reader_csv = csv.reader(archivo_csv)
             
             last_line = None
+            count = 0
             for linea in reader_csv:
+                count = count + 1
+                print(count)
                 last_line = linea
             
             if last_line is not None:
@@ -202,8 +205,8 @@ def read_csv_last(file_csv):
                     last_line_dic[key] = value
             else:
                 printing("El archivo CSV está vacío o no se pudo leer.")
-    except:
-        printing('')
+    except Exception as e:
+        printing('ERROR {e}')
     return last_line_dic
 
 
