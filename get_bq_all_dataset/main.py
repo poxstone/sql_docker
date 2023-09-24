@@ -201,6 +201,7 @@ def read_csv_last(file_csv):
             if last_line is not None:
                 printing("Última línea del archivo CSV:", last_line)
                 # convert array to dict
+                # TODO: aveces leyendo no ascci falla
                 for key, value in zip(SCHEMA_CSV, last_line):
                     last_line_dic[key] = value
             else:
