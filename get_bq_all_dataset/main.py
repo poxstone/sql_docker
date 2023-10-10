@@ -4,12 +4,12 @@ import csv
 from google.cloud import bigquery
 
 # Especifica el ID de tu proyecto de GCP
-project_id = os.environ.get('PROJECT_ID', 'poxs4-datalake-prd')
+project_id         = os.environ.get('PROJECT_ID', 'poxs4-datalake-prd')
 # Crea un cliente de BigQuery
-client = bigquery.Client(project=project_id)
-FILE_CSV = "fields.csv"
-FILE_JSON = "tables.json"
-SCHEMA_CSV = [
+client             = bigquery.Client(project=project_id)
+FILE_CSV           = "fields.csv"
+FILE_JSON          = "tables.json"
+SCHEMA_CSV         = [
     'dataset',
     'table',
     'field_name',
@@ -20,10 +20,13 @@ SCHEMA_CSV = [
     'field_description',
     'policy_tags',
     'example_value']
-GET_DATA_EXAMPLE = True
-LOGS_PRINT = os.getenv('LOGS_PRINT', 'false')
-ERRORS = []
-MAX_EXAMPLES = os.getenv('MAX_EXAMPLES', 10)
+EXPORT_SCHEMA_FILE = True
+SCHEMA_FILE_LOWER  = True
+SCHEMA_FOLDER      = 'schemas'
+GET_DATA_EXAMPLE   = False
+LOGS_PRINT         = os.getenv('LOGS_PRINT', 'false')
+ERRORS             = []
+MAX_EXAMPLES       = os.getenv('MAX_EXAMPLES', 10)
 #AUTO_CONTINUE_LAST_DIC = os.getenv('AUTO_CONTINUE_LAST_DIC', "false")
 
 
@@ -33,6 +36,7 @@ def printing(string, print_logs='true'):
             #logging.info(str(string))
             print(f'{str(string)}')
     return ''
+
 
 # Lista todos los conjuntos de datos en el proyecto
 def get_datasets():
@@ -251,6 +255,23 @@ def add_subfields(field_main, dataset, table, data, parent_name=''):
     return data
 
 
+def save_schema_file(table):
+    schema = table['schema']
+    # clear fields empty
+    for field in schema:
+        if len(field['fields']) == 0:
+            del field['fields']
+    schema_json = json.dumps(schema, indent=4)
+    name = table['id'].split(':')[1].replace('.','_')
+    table_file = name.lower() if SCHEMA_FILE_LOWER else name
+    folder_schemas = SCHEMA_FOLDER
+    if not os.path.exists(folder_schemas):
+        os.makedirs(folder_schemas)
+    with open(f'{folder_schemas}/{table_file}.json', 'w') as file_json:
+        file_json.write(schema_json)
+    return True
+
+
 def do_fields_csv():
     global AUTO_CONTINUE_LAST_DIC
     AUTO_CONTINUE_LAST_DIC = False
@@ -270,6 +291,8 @@ def do_fields_csv():
     for dataset in dataset_list:
         printing(f"working (do csv): {dataset['id']}", "false")
         for table in dataset['tables']:
+            if EXPORT_SCHEMA_FILE:
+                save_schema_file(table)
             for field_main in table['schema']:
                 #printing(f'{dataset['dataset_id']},{table['table_id']},{field.name},{field.field_type}')
                 printing(f'main: {field_main["name"]}')
@@ -277,7 +300,6 @@ def do_fields_csv():
             
             if GET_DATA_EXAMPLE:
                 printing(f"working (get sql example): {table['id']}", "false")
-
 
     printing(f"El archivo CSV '{FILE_CSV}' ha sido creado con éxito.", "false")
 
