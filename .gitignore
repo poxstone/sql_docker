@@ -21,4 +21,5 @@ jmeter.log
 credentials.json
 **/fields.csv
 **/tables.json
+**/tables.csv
 schemas/

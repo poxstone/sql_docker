@@ -86,6 +86,7 @@ bq load --autodetect --source_format=CSV "${TABLE_SEC_PUPULATE_CSV}";
 
 # BQ get all schema
 ```bash
+rm -rf fields.csv fields.csv tables.json tables.csv schemas/;
 cd get_bq_all_dataset/;
 python3 -m virtualenv venv;
 source venv/bin/activate;

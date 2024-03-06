@@ -4,12 +4,15 @@ import csv
 from google.cloud import bigquery
 
 # Especifica el ID de tu proyecto de GCP
-project_id         = os.environ.get('PROJECT_ID', 'poxs4-datalake-prd')
+project_id         = os.environ.get('PROJECT_ID', 'test-py')
 # Crea un cliente de BigQuery
 client             = bigquery.Client(project=project_id)
-FILE_CSV           = "fields.csv"
-FILE_JSON          = "tables.json"
-SCHEMA_CSV         = [
+FILE_FIELDS_CSV    = "fields.csv"
+FILE_TABLES_JSON   = "tables.json"
+FILE_TABLES_CSV    = "tables.csv"
+HEAD_TABLE         = ['kind','etag','id','labels','timePartitioning','numBytes','numLongTermBytes','numRows','creationTime','lastModifiedTime','type','location','clustering','numTimeTravelPhysicalBytes','numTotalLogicalBytes','numActiveLogicalBytes','numLongTermLogicalBytes','numTotalPhysicalBytes','numActivePhysicalBytes','numLongTermPhysicalBytes','numPartitions','num_columns']
+
+HEAD_SCHEMA_CSV         = [
     'dataset',
     'table',
     'field_name',
@@ -21,13 +24,14 @@ SCHEMA_CSV         = [
     'policy_tags',
     'example_value']
 EXPORT_SCHEMA_FILE = True
+EXPORT_TABLE_CSV   = True
 SCHEMA_FILE_LOWER  = True
 SCHEMA_FOLDER      = 'schemas'
 GET_DATA_EXAMPLE   = False
 LOGS_PRINT         = os.getenv('LOGS_PRINT', 'false')
 ERRORS             = []
 MAX_EXAMPLES       = os.getenv('MAX_EXAMPLES', 10)
-#AUTO_CONTINUE_LAST_DIC = os.getenv('AUTO_CONTINUE_LAST_DIC', "false")
+#AUTO_CONTINUE_LAST_DIC_FILE = os.getenv('AUTO_CONTINUE_LAST_DIC_FILE', "false")
 
 
 def printing(string, print_logs='true'):
@@ -97,7 +101,7 @@ def fields_to_dict(fields_main):
     return field_dic
 
 
-def get_table_schema(dataset_id, table_id):
+def get_table_info(dataset_id, table_id):
     dataset_ref = client.dataset(dataset_id)
     table_ref = dataset_ref.table(table_id)
     schema_dic = []
@@ -107,7 +111,17 @@ def get_table_schema(dataset_id, table_id):
     except Exception as e:
         printing(f'ERROR: {e}')
         ERRORS.append({'table': table_id, 'error': f'{e}'})
-        return []
+        return None
+    return table
+
+
+def get_table_schema(dataset_id, table_id):
+    dataset_ref = client.dataset(dataset_id)
+    table_ref = dataset_ref.table(table_id)
+    table = get_table_info(dataset_id, table_id)
+    schema_dic = []
+    if not table:
+        return [], table
 
     # Imprime el esquema de la tabla
     printing(f"Esquema de la tabla {table_id}:")
@@ -121,20 +135,20 @@ def get_table_schema(dataset_id, table_id):
         schema_dic.append(field_dic)
     printing(f'working (get_table_schema): {dataset_id}.{table_id}', "false")
     #return table.schema
-    return schema_dic
+    return schema_dic, table
 
 
 def save_dict_to_file(obj_file):
-    with open(FILE_JSON, "w") as json_file:
+    with open(FILE_TABLES_JSON, "w") as json_file:
         json.dump(obj_file, json_file)
-    printing(f"El diccionario ha sido guardado en '{FILE_JSON}' en formato JSON.", "false")
-    return load_file_to_dict(FILE_JSON)
+    printing(f"El diccionario ha sido guardado en '{FILE_TABLES_JSON}' en formato JSON.", "false")
+    return load_file_to_dict(FILE_TABLES_JSON)
 
 
-def load_file_to_dict(file_json=FILE_JSON):
+def load_file_to_dict(file_TABLES_json=FILE_TABLES_JSON):
     obj_dict = None
     try:
-        with open(file_json, "r") as json_file:
+        with open(file_TABLES_json, "r") as json_file:
             obj_dict = json.load(json_file)
     except Exception as e:
         printing(f'not file found: {e}')
@@ -153,8 +167,11 @@ def get_all_schemas(project_id=project_id):
         for table in tables:
             dataset_id = table['tableReference']['datasetId']
             table_id = table['tableReference']['tableId']
-            schema = get_table_schema(dataset_id, table_id)
+            schema, table_dat = get_table_schema(dataset_id, table_id)
+            table_dic = table_dat.__dict__['_properties'] if table_dat else {}
+            del table_dic['schema']
             table['schema'] = schema
+            table['metadata'] = table_dic
             dataset['tables'].append(table)
     # save to file
     datasets_json = save_dict_to_file(datasets)
@@ -189,7 +206,7 @@ def field_format(field_string):
     return field_string
 
 
-def read_csv_last(file_csv):
+def read_csv_last(file_csv, schema_csv):
     last_line_dic = {}
     try:
         with open(file_csv, mode="r", newline="") as archivo_csv:
@@ -206,7 +223,7 @@ def read_csv_last(file_csv):
                 printing("Última línea del archivo CSV:", last_line)
                 # convert array to dict
                 # TODO: aveces leyendo no ascci falla
-                for key, value in zip(SCHEMA_CSV, last_line):
+                for key, value in zip(schema_csv, last_line):
                     last_line_dic[key] = value
             else:
                 printing("El archivo CSV está vacío o no se pudo leer.")
@@ -216,7 +233,7 @@ def read_csv_last(file_csv):
 
 
 def add_subfields(field_main, dataset, table, data, parent_name=''):
-    global AUTO_CONTINUE_LAST_DIC
+    global AUTO_CONTINUE_LAST_DIC_FILE
     field_name = f'{parent_name}.{field_main["name"]}' if parent_name else field_main["name"]
     if field_main["type"] == 'RECORD':
         for field_sub in field_main["fields"]:
@@ -227,12 +244,12 @@ def add_subfields(field_main, dataset, table, data, parent_name=''):
         table_id = table['tableReference']['tableId']
         
         # disable search if found last registry
-        if AUTO_CONTINUE_LAST_DIC:
-            if AUTO_CONTINUE_LAST_DIC['dataset'] == dataset_id and \
-                AUTO_CONTINUE_LAST_DIC['table'] == table_id and \
-                AUTO_CONTINUE_LAST_DIC['field_name'] == field_name:
+        if AUTO_CONTINUE_LAST_DIC_FILE:
+            if AUTO_CONTINUE_LAST_DIC_FILE['dataset'] == dataset_id and \
+                AUTO_CONTINUE_LAST_DIC_FILE['table'] == table_id and \
+                AUTO_CONTINUE_LAST_DIC_FILE['field_name'] == field_name:
                 # if find last file
-                AUTO_CONTINUE_LAST_DIC = None
+                AUTO_CONTINUE_LAST_DIC_FILE = None
             return data
 
         data_example = do_bq_query(field_name, field_main['type'], f'{project_id}.{dataset_id}.{table_id}')
@@ -248,11 +265,28 @@ def add_subfields(field_main, dataset, table, data, parent_name=''):
                         field_format(field_main['policy_tags'] if 'policy_tags' in field_main else ''),
                         field_format(data_example),
                     ])
-        with open(FILE_CSV, "a") as archivo_csv:
+        with open(FILE_FIELDS_CSV, "a") as archivo_csv:
             escritor = csv.writer(archivo_csv)
             escritor.writerow(data[-1])
         
     return data
+
+
+def save_table_file(table):
+    metadata = table['metadata']
+    line = []
+
+    for i in HEAD_TABLE:
+        if i == 'num_columns':
+            line.append(len(table['schema']))
+        else:
+            value = str(metadata[i]) if i in metadata else ''
+            line.append(value)
+
+    with open(f'{FILE_TABLES_CSV}', 'a') as table_csv:
+        escritor = csv.writer(table_csv)
+        escritor.writerow(line)
+    return True
 
 
 def save_schema_file(table):
@@ -267,30 +301,37 @@ def save_schema_file(table):
     folder_schemas = SCHEMA_FOLDER
     if not os.path.exists(folder_schemas):
         os.makedirs(folder_schemas)
-    with open(f'{folder_schemas}/{table_file}.json', 'w') as file_json:
-        file_json.write(schema_json)
+    with open(f'{folder_schemas}/{table_file}.json', 'w') as file_TABLES_json:
+        file_TABLES_json.write(schema_json)
     return True
 
 
 def do_fields_csv():
-    global AUTO_CONTINUE_LAST_DIC
-    AUTO_CONTINUE_LAST_DIC = False
-    dataset_list = load_file_to_dict(FILE_JSON)
+    global AUTO_CONTINUE_LAST_DIC_FILE
+    AUTO_CONTINUE_LAST_DIC_FILE = False
+    dataset_list = load_file_to_dict(FILE_TABLES_JSON)
     if not dataset_list:
         dataset_list = get_all_schemas()
-    data = [SCHEMA_CSV]
-    # get last csv registry to continue
-    AUTO_CONTINUE_LAST_DIC = read_csv_last(FILE_CSV)
+    data = [HEAD_SCHEMA_CSV]
 
-    if not AUTO_CONTINUE_LAST_DIC:
-        with open(FILE_CSV, mode="w", newline="") as archivo_csv:
+    # get last csv registry to continue
+    AUTO_CONTINUE_LAST_DIC_FILE = read_csv_last(FILE_FIELDS_CSV, HEAD_SCHEMA_CSV)
+    if not AUTO_CONTINUE_LAST_DIC_FILE:
+        with open(FILE_FIELDS_CSV, mode="w", newline="") as archivo_csv:
             escritor = csv.writer(archivo_csv)
             for fila in data:
                 escritor.writerow(fila)
+    
+    if EXPORT_TABLE_CSV:
+        with open(f'{FILE_TABLES_CSV}', 'w') as table_csv:
+            escritor = csv.writer(table_csv)
+            escritor.writerow(HEAD_TABLE)
 
     for dataset in dataset_list:
         printing(f"working (do csv): {dataset['id']}", "false")
         for table in dataset['tables']:
+            if EXPORT_TABLE_CSV:
+                save_table_file(table)
             if EXPORT_SCHEMA_FILE:
                 save_schema_file(table)
             for field_main in table['schema']:
@@ -301,12 +342,19 @@ def do_fields_csv():
             if GET_DATA_EXAMPLE:
                 printing(f"working (get sql example): {table['id']}", "false")
 
-    printing(f"El archivo CSV '{FILE_CSV}' ha sido creado con éxito.", "false")
+    printing(f"El archivo CSV '{FILE_FIELDS_CSV}' ha sido creado con éxito.", "false")
+
+
+def get_table_metadata(dataset_id, table_id):
+    table_info = get_table_info(dataset_id, table_id)
+    return table_info
 
 
 #get_datasets()
 #get_tables_by_dataset('dataset_test_persons_01')
-#get_table_schema('dataset_test_persons_01', 'table_order')
+#get_table_metadata('prd_stg_cliente', 'contrato')
+#get_table_metadata('AF', 'm_bkpf')
+#get_table_schema(dataset_id, table_id)
 #dataset_list = get_all_schemas()
 #printing(dataset_list)
 do_fields_csv()
